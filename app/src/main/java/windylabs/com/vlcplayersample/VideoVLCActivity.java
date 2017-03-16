@@ -1,6 +1,7 @@
 package windylabs.com.vlcplayersample;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.view.MenuItem;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import org.videolan.libvlc.IVideoPlayer;
@@ -39,6 +41,9 @@ public class VideoVLCActivity extends Activity implements IVideoPlayer {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            finish();
+        }
         Log.d(TAG, "VideoVLC -- onCreate -- START ------------");
         setContentView(R.layout.activity_video_vlc);
 
@@ -122,5 +127,10 @@ public class VideoVLCActivity extends Activity implements IVideoPlayer {
         if (mLibVLC == null)
             return;
         mLibVLC.pause();
+    }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
     }
 }
