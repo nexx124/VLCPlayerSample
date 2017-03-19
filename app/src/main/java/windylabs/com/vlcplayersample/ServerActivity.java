@@ -8,8 +8,6 @@ import android.os.Bundle;
 import android.text.format.Formatter;
 import android.widget.TextView;
 
-import java.io.IOException;
-
 public class ServerActivity extends Activity {
 
     TextView infoip, msg, infoWifi;
@@ -37,7 +35,12 @@ public class ServerActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //server.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
 }

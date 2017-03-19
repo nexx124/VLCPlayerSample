@@ -5,10 +5,13 @@ package windylabs.com.vlcplayersample;
  */
 
 
+import android.app.ActivityManager;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
         import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.TextView;
@@ -23,6 +26,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class Server extends Service{
@@ -30,6 +34,8 @@ public class Server extends Service{
     ServerSocket serverSocket;
     String message = "";
     Socket socket;
+    InputStream is;
+
     static final int socketServerPORT = 8080;
     private final String TAG = "SERVER_LOG";
 
@@ -52,6 +58,7 @@ public class Server extends Service{
         if (serverSocket != null) {
             try {
                 serverSocket.close();
+                is.close();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -82,21 +89,28 @@ public class Server extends Service{
             try {
                 socket = serverSocket.accept();
                 while (true) {
-                    InputStream is = socket.getInputStream();
+                    is = socket.getInputStream();
                     byte buf[] = new byte[64*1024];
                     int r = is.read(buf);
                     final String data = new String(buf, 0, r);
 
                     if (data.equals("@@stop")) {
-                        //is.close();
-                        Intent server_activity = new Intent(getApplicationContext(), ServerActivity.class);
-                        server_activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(server_activity);
+//                        Intent server_activity = new Intent(getApplicationContext(), ServerActivity.class);
+//                        server_activity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                        startActivity(server_activity);
+
+                        Intent mIntent = new Intent("ActionCode.intent.VLC");
+                        mIntent.putExtra("action_code", 2);
+                        getBaseContext().sendBroadcast(mIntent);
+
                         Log.e(TAG, "получена команда остановить");
                         continue;
                     }
-                    if (data.equals("@@continue_stream")) {
+                    if (data.equals("@@pause_stream")) {
                         Log.e(TAG, "continue  command was detected");
+                        Intent mIntent = new Intent("ActionCode.intent.VLC");
+                        mIntent.putExtra("action_code", 1);
+                        getBaseContext().sendBroadcast(mIntent);
                         continue;
                     }
                     if (Pattern.matches("http://[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:[0-9]{1,5}/[a-z,A-Z,0-9]*", data)) {
@@ -106,26 +120,13 @@ public class Server extends Service{
                             outputStream.write(reply.getBytes());
                             outputStream.flush();
                         }
-//                        PrintStream printStream = new PrintStream(outputStream);
-//                        printStream.print("kek");
-//                        printStream.close();
-//                        activity.runOnUiThread(new Runnable() {
-//
-//                            @Override
-//                            public void run() {
-//                                activity.msg.setText(data);
-//                            }
-//                        });
-//					    SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread(
-//							    socket, count);
-//					    socketServerReplyThread.run();
 
                         final String url = new String(data);
                         Intent toFullscreen = new Intent (getApplicationContext(), VideoVLCActivity.class);
                         Bundle b = new Bundle();
                         b.putString("videoUrl", url);
-                        toFullscreen.putExtras(b); //Put your id to your next Intent
-                        toFullscreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK /*| Intent.FLAG_ACTIVITY_CLEAR_TOP*/ | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        toFullscreen.putExtras(b);
+                        toFullscreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(toFullscreen);
                         Log.e(TAG, "получена команда на открытие стрима");
                     }
@@ -138,54 +139,6 @@ public class Server extends Service{
         }
 
     }
-
-//    private class SocketServerReplyThread extends Thread {
-//
-//        private Socket hostThreadSocket;
-//        int cnt;
-//
-//        SocketServerReplyThread(Socket socket, int c) {
-//            hostThreadSocket = socket;
-//            cnt = c;
-//        }
-//
-//        @Override
-//        public void run() {
-//            OutputStream outputStream;
-//            String msgReply = "Hello from Server, you are #" + cnt;
-//
-//            try {
-//                outputStream = hostThreadSocket.getOutputStream();
-//                PrintStream printStream = new PrintStream(outputStream);
-//                printStream.print(msgReply);
-//                printStream.close();
-//
-//                message += "replayed: " + msgReply + "\n";
-//
-//                activity.runOnUiThread(new Runnable() {
-//
-//                    @Override
-//                    public void run() {
-//                        activity.msg.setText(message);
-//                    }
-//                });
-//
-//            } catch (IOException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//                message += "Something wrong! " + e.toString() + "\n";
-//            }
-//
-//            activity.runOnUiThread(new Runnable() {
-//
-//                @Override
-//                public void run() {
-//                    activity.msg.setText(message);
-//                }
-//            });
-//        }
-//
-//    }
 
     public String getIpAddress() {
         String ip = "";

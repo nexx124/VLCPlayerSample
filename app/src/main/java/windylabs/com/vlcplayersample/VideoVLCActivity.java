@@ -1,7 +1,10 @@
 package windylabs.com.vlcplayersample;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -20,6 +23,8 @@ import org.videolan.libvlc.LibVlcException;
 public class VideoVLCActivity extends Activity implements IVideoPlayer {
     private static final String TAG = VideoVLCActivity.class.getSimpleName();
     private static final String TAG_VLC = "VLC_TAG";
+    private static final int pauseCode = 1;
+    private static final int stopCode = 2;
 
     // size of the video
     private int mVideoHeight;
@@ -37,6 +42,9 @@ public class VideoVLCActivity extends Activity implements IVideoPlayer {
     private LibVLC mLibVLC;
 
     private String mMediaUrl;
+
+    private BroadcastReceiver mIntentReceiver;
+    private int action_code;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,14 +131,40 @@ public class VideoVLCActivity extends Activity implements IVideoPlayer {
         return -1;
     }
 
-    public void pauseVideo() {
-        if (mLibVLC == null)
-            return;
-        mLibVLC.pause();
-    }
-
     @Override
     public void onBackPressed() {
         //super.onBackPressed();
+        //заморочиться, и посылать отсюда в ServerActivity код, который передается в Server
+        // и оттуда отсылается в клиент, чтобы остановился стрим (ОЧЕНЬ ЗАМОРОЧИТЬСЯ)
+        //пока просто при трансляции если нажать назад кнопку - ничего не произойдет. трансляция управляется только
+        //командами с клиента
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        IntentFilter intentFilter = new IntentFilter("ActionCode.intent.VLC");
+        mIntentReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                action_code = intent.getIntExtra("action_code", 0);
+
+                if (action_code == pauseCode) {
+                    if (mLibVLC.getPlayerState() == LibVLC.MEDIA_PAUSED)
+                        mLibVLC.play();
+                    else if (mLibVLC.getPlayerState() != LibVLC.MEDIA_PAUSED)
+                        mLibVLC.pause();
+                    Log.e(TAG_VLC, "action_code получен");
+                } else if (action_code == stopCode) {
+                    mLibVLC.stop();
+                    finish();
+                    Log.e(TAG_VLC, "получен stopCode. Activity закрывается");
+                } else {
+                    Log.e(TAG_VLC, "action_code не опознан");
+                }
+            }
+        };
+        registerReceiver(mIntentReceiver, intentFilter);
     }
 }
