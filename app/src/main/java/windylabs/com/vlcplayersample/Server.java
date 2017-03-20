@@ -9,7 +9,8 @@ import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
-        import android.os.Bundle;
+import android.nfc.Tag;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
@@ -59,6 +60,7 @@ public class Server extends Service{
             try {
                 serverSocket.close();
                 is.close();
+                Log.e(TAG, "вызов ондестрой в классе сервера");
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
